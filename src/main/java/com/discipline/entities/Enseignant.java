@@ -39,4 +39,60 @@ public class Enseignant {
 
     @OneToMany(mappedBy = "enseignant")
     private Set<Cours> cours ;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getMatricule() {
+        return matricule;
+    }
+
+    public void setMatricule(String matricule) {
+        this.matricule = matricule;
+    }
+
+    public String getNom() {
+        return nom;
+    }
+
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+
+    public String getPrenom() {
+        return prenom;
+    }
+
+    public void setPrenom(String prenom) {
+        this.prenom = prenom;
+    }
+
+    public List<Adresse> getAdresses() {
+        return adresses;
+    }
+
+    public void setAdresses(List<Adresse> adresses) {
+        this.adresses = adresses;
+    }
+
+    public Set<Matiere> getMatieres() {
+        return matieres;
+    }
+
+    public void setMatieres(Set<Matiere> matieres) {
+        this.matieres = matieres;
+    }
+
+    public Set<Cours> getCours() {
+        return cours;
+    }
+
+    public void setCours(Set<Cours> cours) {
+        this.cours = cours;
+    }
 }

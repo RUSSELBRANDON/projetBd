@@ -1,9 +1,10 @@
-package com.discipline.Services;
+package com.discipline.Controlers;
 
 import java.util.List;
 
 import javax.validation.Valid;
 
+import com.discipline.Services.ServicesImplementations.AdresseServicesImplementation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,24 +31,21 @@ import org.springframework.web.bind.annotation.GetMapping;
     
     @RequestMapping("/adresses")
 public class AdresseRestController {
-    private AdresseRepository adresseRepository;
+        @Autowired
+    AdresseServicesImplementation adresseServicesImplementation;
     @Autowired
     private EnseignantRepository enseignantRepository;
 
-    
-    public AdresseRestController(AdresseRepository adresseRepository){
-        this.adresseRepository = adresseRepository;
+    @GetMapping("/listeAdresses")
+    public List<Adresse> listeAdresses(){
+        return adresseServicesImplementation.findAllAdresses();
     }
-    @GetMapping()
-    public List<Adresse> lisAdresse(){
-        return adresseRepository.findAll();
-    }
-    @GetMapping("/{id}")
+    @GetMapping("/adresse/{id}")
     public Adresse adresse(@PathVariable Long id){
-        return adresseRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Enseignant non trouvé avec l'id: " + id));
+        return adresseServicesImplementation.findAdresseById(id);
     }
 
-    @PostMapping
+    @PostMapping("/ajouterAdresse")
     public ResponseEntity<?> ajouterAdresse(@Valid @RequestBody Adresse adresse, BindingResult result) {
         if (result.hasErrors()) {
             return new ResponseEntity<>("Erreur de validation", HttpStatus.BAD_REQUEST);
@@ -61,7 +59,7 @@ public class AdresseRestController {
 
         adresse.setEnseignant(enseignant);
 
-        Adresse savedAdresse = adresseRepository.save(adresse);
+        Adresse savedAdresse = adresseServicesImplementation.saveAdresse(adresse);
 
         return new ResponseEntity<>(savedAdresse, HttpStatus.CREATED);
     }
@@ -72,9 +70,7 @@ public class AdresseRestController {
             return new ResponseEntity<>("Erreur de validation", HttpStatus.BAD_REQUEST);
         }
 
-        Adresse adresse = adresseRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Adresse non trouvée avec l'id: " + id));
-
+        Adresse adresse = adresseServicesImplementation.findAdresseById(id);
         // Récupérer l'enseignant complet à partir de la base de données
         Long enseignantId = adresseDetails.getEnseignant().getId();
         Enseignant enseignant = enseignantRepository.findById(enseignantId).orElse(null);
@@ -87,20 +83,18 @@ public class AdresseRestController {
         adresse.setType_adresse(adresseDetails.getType_adresse());
         adresse.setEnseignant(enseignant);
 
-        Adresse updatedAdresse = adresseRepository.save(adresse);
+        Adresse updatedAdresse = adresseServicesImplementation.saveAdresse(adresse);
 
         return new ResponseEntity<>(updatedAdresse, HttpStatus.OK);
     }
 
      @DeleteMapping("/{id}")
     public ResponseEntity<?> supprimerAdresse(@PathVariable Long id) {
-        Adresse adresse = adresseRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Enseignant non trouvé avec l'id: " + id));
+        Adresse adresse = adresseServicesImplementation.findAdresseById(id);
 
-        adresseRepository.delete(adresse);
+        adresseServicesImplementation.deleteAdresseById(adresse.getId());
 
         return new ResponseEntity<>("Enseignant supprimé avec succès", HttpStatus.OK);
     }
-
 
 }
