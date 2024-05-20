@@ -1,6 +1,7 @@
 package com.discipline.Services.ServicesImplementations;
 
 import com.discipline.Services.EnseignantServices;
+import com.discipline.entities.Adresse;
 import com.discipline.entities.Enseignant;
 import com.discipline.repositories.EnseignantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,4 +43,16 @@ public class EnseignantServicesImplementation implements EnseignantServices {
     public void deleteAllEnseignants() {
         enseignantRepository.deleteAll();
     }
+
+    @Override
+    public Boolean ifExistsByEnseignantMatricule(String matricule) {
+        List<Enseignant> enseignants = enseignantRepository.findAll();
+        for (Enseignant enseignant : enseignants){
+            if (enseignant.getMatricule().equals(matricule)){
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

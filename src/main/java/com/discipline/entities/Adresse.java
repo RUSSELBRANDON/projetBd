@@ -19,7 +19,7 @@ public class Adresse {
     @Enumerated(EnumType.STRING)
     private TypeAdresse type_adresse;
 
-    // Relation ManyToOne avec Enseignant
+     //Relation ManyToOne avec Enseignant
     @ManyToOne
     @JoinColumn(name = "enseignant_id")
 

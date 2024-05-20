@@ -14,4 +14,5 @@ public interface AdresseServices {
     public List<Adresse> findAllAdresses();
     public void deleteAdresseById(Long id);
     public void deleteAllAdresses();
+    public Boolean ifExistsByAdresseId(Long id);
 }

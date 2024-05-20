@@ -2,13 +2,10 @@ package com.discipline.Controlers;
 
 import java.util.List;
 
-import javax.validation.Valid;
-
 import com.discipline.Services.ServicesImplementations.AdresseServicesImplementation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,84 +14,67 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.discipline.entities.Adresse;
-import com.discipline.entities.Enseignant;
-import com.discipline.repositories.AdresseRepository;
-import com.discipline.repositories.EnseignantRepository;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 
-
-
-
-    @RestController
-    
-    @RequestMapping("/adresses")
+@RestController
+@RequestMapping("/adresse")
 public class AdresseRestController {
-        @Autowired
-    AdresseServicesImplementation adresseServicesImplementation;
     @Autowired
-    private EnseignantRepository enseignantRepository;
-
-    @GetMapping("/listeAdresses")
-    public List<Adresse> listeAdresses(){
-        return adresseServicesImplementation.findAllAdresses();
-    }
-    @GetMapping("/adresse/{id}")
-    public Adresse adresse(@PathVariable Long id){
-        return adresseServicesImplementation.findAdresseById(id);
-    }
-
+    AdresseServicesImplementation adresseServicesImplementation;
     @PostMapping("/ajouterAdresse")
-    public ResponseEntity<?> ajouterAdresse(@Valid @RequestBody Adresse adresse, BindingResult result) {
-        if (result.hasErrors()) {
-            return new ResponseEntity<>("Erreur de validation", HttpStatus.BAD_REQUEST);
+    public ResponseEntity<Object> createAdresse(@RequestBody Adresse adresseDTO){
+        if (adresseServicesImplementation.ifExistsByAdresseId(adresseDTO.getId())){
+            return new ResponseEntity<>("L'adresse existe déjà",HttpStatus.BAD_REQUEST);
         }
-
-        Long enseignantId = adresse.getEnseignant().getId();
-        Enseignant enseignant = enseignantRepository.findById(enseignantId).orElse(null);
-        if (enseignant == null) {
+        Long enseignantId =  (adresseServicesImplementation.findAdresseById(adresseDTO.getId()).getEnseignant().getId());
+        if (enseignantId == null){
             return new ResponseEntity<>("Enseignant non trouvé", HttpStatus.NOT_FOUND);
         }
-
-        adresse.setEnseignant(enseignant);
-
-        Adresse savedAdresse = adresseServicesImplementation.saveAdresse(adresse);
-
-        return new ResponseEntity<>(savedAdresse, HttpStatus.CREATED);
+        Adresse savedAdresse = adresseServicesImplementation.saveAdresse(adresseDTO);
+        return new ResponseEntity<>(savedAdresse,HttpStatus.CREATED);
     }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<?> mettreAJourAdresse(@PathVariable Long id, @Valid @RequestBody Adresse adresseDetails, BindingResult result) {
-        if (result.hasErrors()) {
-            return new ResponseEntity<>("Erreur de validation", HttpStatus.BAD_REQUEST);
+    @PutMapping("/modifierAdresse/{id}")
+    public ResponseEntity<Object> updateAdresse(@PathVariable Long id, @RequestBody Adresse adresseDTO ){
+        if (!adresseServicesImplementation.ifExistsByAdresseId(id)){
+            return new ResponseEntity<>("Cet adresse n'existe pas",HttpStatus.NOT_FOUND);
         }
-
         Adresse adresse = adresseServicesImplementation.findAdresseById(id);
-        // Récupérer l'enseignant complet à partir de la base de données
-        Long enseignantId = adresseDetails.getEnseignant().getId();
-        Enseignant enseignant = enseignantRepository.findById(enseignantId).orElse(null);
-        if (enseignant == null) {
-            return new ResponseEntity<>("Enseignant non trouvé", HttpStatus.NOT_FOUND);
-        }
-
-        // Mettre à jour les champs de l'adresse
-        adresse.setAdresse(adresseDetails.getAdresse());
-        adresse.setType_adresse(adresseDetails.getType_adresse());
-        adresse.setEnseignant(enseignant);
+        adresse.setAdresse(adresseDTO.getAdresse());
+        adresse.setType_adresse(adresseDTO.getType_adresse());
+        adresse.setEnseignant(adresseDTO.getEnseignant());
 
         Adresse updatedAdresse = adresseServicesImplementation.saveAdresse(adresse);
-
         return new ResponseEntity<>(updatedAdresse, HttpStatus.OK);
     }
+    @DeleteMapping("/supprimerAdresse/{id}")
+    public ResponseEntity<String> deleteAdresse(@PathVariable Long id){
+        if (!adresseServicesImplementation.ifExistsByAdresseId(id)){
+            return new ResponseEntity<>("Cet adresse n'existe pas",HttpStatus.NOT_FOUND);
+        }
+        adresseServicesImplementation.deleteAdresseById(id);
+        return new ResponseEntity<>("L'adresse a été supprimée avec succès",HttpStatus.OK);
+    }
 
-     @DeleteMapping("/{id}")
-    public ResponseEntity<?> supprimerAdresse(@PathVariable Long id) {
-        Adresse adresse = adresseServicesImplementation.findAdresseById(id);
+    @DeleteMapping("/supprimerLesAdresses")
+    public ResponseEntity<String> deleteAllAdresses(){
+        adresseServicesImplementation.deleteAllAdresses();
+        return new ResponseEntity<>("Les adresses ont été supprimées avec succès",HttpStatus.OK);
+    }
 
-        adresseServicesImplementation.deleteAdresseById(adresse.getId());
-
-        return new ResponseEntity<>("Enseignant supprimé avec succès", HttpStatus.OK);
+    @GetMapping("/rechercherAdresse/{id}")
+    public ResponseEntity<Object> findAdresse(@PathVariable Long id){
+        if (!adresseServicesImplementation.ifExistsByAdresseId(id)){
+            return new ResponseEntity<>("Cet adresse n'existe pas",HttpStatus.NOT_FOUND);
+        }
+        Adresse adresseFound = adresseServicesImplementation.findAdresseById(id);
+        return new ResponseEntity<>(adresseFound,HttpStatus.FOUND);
+    }
+    @GetMapping("/listeAdresses")
+    public ResponseEntity<List<Adresse>> listesAdresses(){
+        List<Adresse> adresses = adresseServicesImplementation.findAllAdresses();
+        return new ResponseEntity<>(adresses, HttpStatus.FOUND);
     }
 
 }

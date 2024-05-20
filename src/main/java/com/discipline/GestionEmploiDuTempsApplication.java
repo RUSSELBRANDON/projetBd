@@ -10,7 +10,6 @@ public class GestionEmploiDuTempsApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(GestionEmploiDuTempsApplication.class, args);
-
     }
 
 }

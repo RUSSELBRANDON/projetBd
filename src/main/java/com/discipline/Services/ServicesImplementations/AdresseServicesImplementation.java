@@ -41,4 +41,15 @@ public class AdresseServicesImplementation implements AdresseServices {
     public void deleteAllAdresses() {
         adresseRepository.deleteAll();
     }
+
+    @Override
+    public Boolean ifExistsByAdresseId(Long id){
+        List<Adresse> adresses = adresseRepository.findAll();
+        for (Adresse adresse : adresses){
+            if (adresse.getId().equals(id)){
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -1,8 +1,9 @@
 package com.discipline.Controlers;
 
+import com.discipline.Services.ServicesImplementations.EnseignantServicesImplementation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,64 +14,65 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.discipline.entities.Enseignant;
 import java.util.List;
-import com.discipline.repositories.EnseignantRepository;
-import javax.validation.Valid;
-@RestController
 
+@RestController
 @RequestMapping("/enseignants")
 public class EnseignantRestController {
-    private EnseignantRepository enseignantRepository;
-    public EnseignantRestController(EnseignantRepository enseignantRepository){
-        this.enseignantRepository = enseignantRepository;
-    }
+    @Autowired
+    EnseignantServicesImplementation enseignantServicesImplementation;
 
-    @GetMapping
-    public List<Enseignant> enseignantList(){
-        return enseignantRepository.findAll();
-    }
-    @GetMapping("/{id}")
-
-    public Enseignant enseignant(@PathVariable Long id){
-        Enseignant enseignant = enseignantRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Enseignant non trouvé avec l'id: " + id));
-                return enseignant;
-    }
-    @PostMapping
-    public ResponseEntity<?> ajouterEnseignant(@Valid @RequestBody Enseignant enseignant, BindingResult result) {
-        if (result.hasErrors()) {
-            return new ResponseEntity<>("Erreur de validation", HttpStatus.BAD_REQUEST);
+    @PostMapping("/ajouterEnseignant")
+    public ResponseEntity<Object> createEnseignant(@RequestBody Enseignant enseignantDTO){
+        if (enseignantServicesImplementation.ifExistsByEnseignantMatricule(enseignantDTO.getMatricule())) {
+            return new ResponseEntity<>("L'enseignant existe déjà", HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(enseignantRepository.save(enseignant), HttpStatus.CREATED);
+        Enseignant enseignantCreated = enseignantServicesImplementation.saveEnseignant(enseignantDTO);
+        return new ResponseEntity<>(enseignantCreated, HttpStatus.CREATED);
     }
-
-    // Mettre à jour un enseignant existant avec validation des données
-    @PutMapping("/{id}")
-    public ResponseEntity<?> mettreAJourEnseignant(@PathVariable Long id, @Valid @RequestBody Enseignant enseignantDetails, BindingResult result) {
-        if (result.hasErrors()) {
-            return new ResponseEntity<>("Erreur de validation", HttpStatus.BAD_REQUEST);
+    @PutMapping("/modifier/{id}")
+    public ResponseEntity<Object> updateEnseignant(@PathVariable Long id, @RequestBody Enseignant enseignantDTO){
+        if (!enseignantServicesImplementation.ifExistsByEnseignantMatricule(enseignantDTO.getMatricule())) {
+            return new ResponseEntity<>("Cet enseignant n'existe pas", HttpStatus.NOT_FOUND);
         }
-
-        Enseignant enseignant = enseignantRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Enseignant non trouvé avec l'id: " + id));
-
-        enseignant.setMatricule(enseignantDetails.getMatricule());
-        enseignant.setNom(enseignantDetails.getNom());
-        enseignant.setPrenom(enseignantDetails.getPrenom());
-
-        // Mettre à jour d'autres champs si nécessaire
-
-        return new ResponseEntity<>(enseignantRepository.save(enseignant), HttpStatus.OK);
+        Enseignant enseignantUpdated = enseignantServicesImplementation.findEnseignantById(id);
+        enseignantUpdated.setAdresses(enseignantDTO.getAdresses());
+        enseignantUpdated.setCours(enseignantDTO.getCours());
+        enseignantUpdated.setNom(enseignantDTO.getNom());
+        enseignantUpdated.setPrenom(enseignantDTO.getPrenom());
+        enseignantUpdated.setMatieres(enseignantDTO.getMatieres());
+        enseignantUpdated.setMatricule(enseignantDTO.getMatricule());
+        return new ResponseEntity<>(enseignantUpdated,HttpStatus.OK);
     }
 
-    // Supprimer un enseignant
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> supprimerEnseignant(@PathVariable Long id) {
-        Enseignant enseignant = enseignantRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Enseignant non trouvé avec l'id: " + id));
-
-        enseignantRepository.delete(enseignant);
-
-        return new ResponseEntity<>("Enseignant supprimé avec succès", HttpStatus.OK);
+    @DeleteMapping("/supprimerEnseignant/{id}")
+    public ResponseEntity<String> deleteEnseignant(@PathVariable Long id){
+        Enseignant enseignant = enseignantServicesImplementation.findEnseignantById(id);
+        if (!enseignantServicesImplementation.ifExistsByEnseignantMatricule(enseignant.getMatricule())) {
+            return new ResponseEntity<>("Cet enseignant n'existe pas", HttpStatus.NOT_FOUND);
+        }
+        enseignantServicesImplementation.deleteEnseignantById(id);
+        return new ResponseEntity<>("Enseignant supprimé avec succès",HttpStatus.OK);
     }
-    
+
+    @DeleteMapping("/supprimerLesEnseignants")
+    public ResponseEntity<String> deleteAllEnseignants(){
+        enseignantServicesImplementation.deleteAllEnseignants();
+        return new ResponseEntity<>("Les enseignants ont été supprimé avec succès",HttpStatus.OK);
+    }
+
+    @GetMapping("/rechercherEnseignant/{id}")
+    public ResponseEntity<Object> findEnseignantById(@PathVariable Long id){
+        Enseignant enseignant = enseignantServicesImplementation.findEnseignantById(id);
+        if (!enseignantServicesImplementation.ifExistsByEnseignantMatricule(enseignant.getMatricule())) {
+            return new ResponseEntity<>("Cet enseignant n'existe pas", HttpStatus.NOT_FOUND);
+        }
+        Enseignant enseignantFound = enseignantServicesImplementation.findEnseignantById(id);
+        return new ResponseEntity<>(enseignantFound,HttpStatus.FOUND);
+    }
+    @GetMapping("/listeEnseignant")
+    public ResponseEntity<List<Enseignant>> listEnseignants(){
+        List<Enseignant> enseignants = enseignantServicesImplementation.findAllEnseignants();
+        return new ResponseEntity<>(enseignants, HttpStatus.FOUND);
+    }
+
 }

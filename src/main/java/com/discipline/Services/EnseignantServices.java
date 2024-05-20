@@ -14,5 +14,6 @@ public interface EnseignantServices {
     public List<Enseignant> findAllEnseignants();
     public void deleteEnseignantById(Long id);
     public void deleteAllEnseignants();
+    public Boolean ifExistsByEnseignantMatricule(String matricule);
 
 }
